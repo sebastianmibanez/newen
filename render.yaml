@@ -3,3 +3,4 @@ services:
     name: newen
     runtime: docker
     dockerfilePath: ./Dockerfile
+    plan: free
