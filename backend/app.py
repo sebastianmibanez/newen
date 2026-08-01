@@ -1,10 +1,15 @@
 import hmac
+import mimetypes
 import os
 from flask import Flask, request, send_from_directory
 from dotenv import load_dotenv
 from extensions import db, migrate
 
 load_dotenv()
+
+# python:3.12-slim no trae /etc/mime.types, asi que mimetypes no reconoce .webp
+# y Flask servia todas las fotos como application/octet-stream.
+mimetypes.add_type("image/webp", ".webp")
 
 
 def create_app():
@@ -38,6 +43,20 @@ def create_app():
         if not admin_token or not hmac.compare_digest(sent, admin_token):
             return {"error": "No autorizado"}, 401
         return None
+
+    # Flask manda no-cache por defecto, asi que el visitante que vuelve se
+    # re-descargaba todas las fotos. index.html queda sin cachear a proposito:
+    # es lo que apunta a los assets nuevos despues de cada deploy.
+    @app.after_request
+    def cache_headers(response):
+        if request.path.startswith("/assets/"):
+            # Vite le pone hash al nombre; si cambia el contenido, cambia la URL.
+            response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        elif request.path.startswith("/images/") or request.path in ("/favicon.png", "/og-image.jpg"):
+            # Sin hash en el nombre: un dia de cache es el techo razonable para
+            # que una foto reemplazada aparezca sin tener que renombrarla.
+            response.headers["Cache-Control"] = "public, max-age=86400"
+        return response
 
     from routes.sports import bp as sports_bp
     from routes.posts import bp as posts_bp

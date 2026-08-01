@@ -19,7 +19,7 @@ newen/
 │   │   ├── posts.py
 │   │   └── events.py
 │   ├── seed.py         # Poblar deportes iniciales
-│   ├── test_auth.py    # Chequeo del guard de escritura
+│   ├── test_smoke.py   # Chequeos de auth, ruteo y headers de assets
 │   └── requirements.txt
 ├── frontend/
 │   ├── assets-src/     # Fotos originales (NO se publican)
@@ -83,7 +83,7 @@ está seteada, las escrituras se rechazan con 401 (el default es cerrado).
 Verificar que la protección sigue en pie:
 
 ```bash
-cd backend && python3 test_auth.py
+cd backend && python3 test_smoke.py
 ```
 
 ## Deploy en Render

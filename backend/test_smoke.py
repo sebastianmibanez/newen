@@ -1,10 +1,12 @@
-"""Chequeo del guard de escritura de la API.
+"""Chequeos de la app: permisos de escritura, ruteo y headers de los assets.
 
-    python3 test_auth.py
+    python3 test_smoke.py
 
-Si pasa no imprime nada salvo el OK final. Si el guard se rompe, revienta el assert.
+Necesita el frontend compilado (cd ../frontend && npm run build).
+Si pasa no imprime nada salvo el OK final; si algo se rompe, revienta el assert.
 """
 import os
+from pathlib import Path
 
 os.environ["DATABASE_URL"] = "sqlite://"  # base en memoria, no toca disco
 os.environ["ADMIN_TOKEN"] = "token-de-prueba"
@@ -47,5 +49,19 @@ assert client.get("/api/events?sport=handball").status_code == 200
 home = client.get("/")
 assert home.status_code == 200, "no hay frontend/dist compilado"
 assert b"og:image" in home.data, "se perdieron los meta tags de compartir"
+# index.html no se cachea: es lo que apunta a los assets nuevos tras cada deploy.
+assert "immutable" not in home.headers.get("Cache-Control", "")
 
-print("OK: escritura protegida, lectura publica, sin redirects, frontend servido.")
+# El contenedor no reconocia .webp y servia las fotos como octet-stream.
+foto = client.get("/images/logo-newen.webp")
+assert foto.status_code == 200
+assert foto.headers["Content-Type"] == "image/webp", foto.headers["Content-Type"]
+assert foto.headers["Cache-Control"] == "public, max-age=86400"
+
+# Los assets de Vite llevan hash en el nombre, asi que se cachean para siempre.
+dist = Path(__file__).resolve().parent.parent / "frontend" / "dist"
+css = next(dist.glob("assets/*.css"), None)
+assert css, "no hay assets compilados en frontend/dist"
+assert "immutable" in client.get(f"/assets/{css.name}").headers["Cache-Control"]
+
+print("OK: escritura protegida, lectura publica, sin redirects, frontend servido, cache y MIME correctos.")
