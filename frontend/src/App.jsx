@@ -11,7 +11,9 @@ export default function App() {
     <BrowserRouter>
       <div className="min-h-screen flex flex-col">
         <Navbar />
-        <main className="flex-1">
+        {/* pt-16 libra la Navbar, que es fixed. Va aca y no en cada pagina: la
+            SportPage no lo tenia y el titulo quedaba tapado por la barra. */}
+        <main className="flex-1 pt-16">
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/handball" element={<SportPage slug="handball" />} />

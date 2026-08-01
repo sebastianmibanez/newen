@@ -73,9 +73,7 @@ export default function Landing() {
   return (
     <>
       {/* ── Hero carousel fullscreen ── */}
-      <div className="pt-16">
-        <HeroCarousel slides={HERO_SLIDES} />
-      </div>
+      <HeroCarousel slides={HERO_SLIDES} />
 
       {/* ── Noticias – editorial PSG style ── */}
       <section className="max-w-7xl mx-auto px-6 md:px-10 py-16">

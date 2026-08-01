@@ -84,7 +84,7 @@ export default function Admin() {
 
   if (!token) {
     return (
-      <div className="pt-32 pb-24 px-6 max-w-sm mx-auto">
+      <div className="pt-16 pb-24 px-6 max-w-sm mx-auto">
         <p className="section-label mb-2">Club Deportivo Newen</p>
         <h1 className="display-title text-4xl mb-8">Panel</h1>
         <form
@@ -115,7 +115,7 @@ export default function Admin() {
   }
 
   return (
-    <div className="pt-28 pb-24 px-6 md:px-10 max-w-4xl mx-auto">
+    <div className="pt-12 pb-24 px-6 md:px-10 max-w-4xl mx-auto">
       <div className="flex items-end justify-between mb-10">
         <div>
           <p className="section-label mb-2">Club Deportivo Newen</p>
