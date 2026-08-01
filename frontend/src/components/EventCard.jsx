@@ -14,7 +14,7 @@ export default function EventCard({ event }) {
       </div>
 
       <div className="flex-1 min-w-0">
-        <p className="text-white/40 text-xs capitalize mb-1">{dayName} · {time} hs</p>
+        <p className="text-white/60 text-xs capitalize mb-1">{dayName} · {time} hs</p>
         <h3 className="font-bold leading-snug line-clamp-2">{event.title}</h3>
         {event.location && (
           <p className="text-white/50 text-sm mt-1 flex items-center gap-1">

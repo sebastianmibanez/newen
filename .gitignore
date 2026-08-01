@@ -4,8 +4,11 @@ __pycache__/
 *.pyo
 .env
 *.db
+venv/
+backend/venv/
 backend/uploads/
 backend/migrations/
+backend/instance/
 
 # Node
 node_modules/
@@ -14,6 +17,3 @@ frontend/dist/
 # OS
 .DS_Store
 Thumbs.db
-
-# Docker
-.dockerignore

@@ -4,3 +4,11 @@ services:
     runtime: docker
     dockerfilePath: ./Dockerfile
     plan: free
+    envVars:
+      # generateValue: Render inventa un valor seguro la primera vez y no lo
+      # vuelve a tocar. El secreto nunca pasa por el repo. Para leer el token
+      # (lo vas a necesitar para publicar por API): dashboard > newen > Environment.
+      - key: ADMIN_TOKEN
+        generateValue: true
+      - key: SECRET_KEY
+        generateValue: true

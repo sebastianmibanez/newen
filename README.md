@@ -19,15 +19,35 @@ newen/
 │   │   ├── posts.py
 │   │   └── events.py
 │   ├── seed.py         # Poblar deportes iniciales
+│   ├── test_auth.py    # Chequeo del guard de escritura
 │   └── requirements.txt
 ├── frontend/
+│   ├── assets-src/     # Fotos originales (NO se publican)
+│   ├── public/images/  # WebP generados (esto es lo que se sirve)
 │   ├── src/
 │   │   ├── pages/      # Landing, SportPage, NotFound
-│   │   ├── components/ # Navbar, Footer, PostCard, EventCard
+│   │   ├── components/ # Navbar, Footer, HeroCarousel, Carousel, EventCard
 │   │   └── App.jsx
 │   └── package.json
+├── scripts/
+│   └── optimize-images.py
 └── render.yaml
 ```
+
+## Fotos
+
+Las fotos originales van a `frontend/assets-src/`. **Nunca** se ponen directo en
+`public/images/`: ese directorio se publica tal cual y ahí es donde el sitio se
+vuelve pesado (arrancó pesando 12 MB por subir PNG sin procesar).
+
+Después de agregar fotos nuevas:
+
+```bash
+python3 scripts/optimize-images.py
+```
+
+Convierte todo a WebP con ancho máximo de 1600px y regenera `og-image.jpg` y
+`favicon.png`. Los originales quedan en el repo pero fuera del build.
 
 ## Desarrollo local (Docker — una sola terminal)
 
@@ -45,16 +65,26 @@ Para detener: `Ctrl+C` y luego `docker compose down`
 
 ## API Endpoints
 
+Los GET son públicos. **Todo lo que escribe o borra exige el header
+`X-Admin-Token`** con el valor de la env var `ADMIN_TOKEN`; si esa variable no
+está seteada, las escrituras se rechazan con 401 (el default es cerrado).
+
 | Método | URL | Descripción |
 |--------|-----|-------------|
-| GET | `/api/sports/` | Listado de deportes |
+| GET | `/api/sports` | Listado de deportes |
 | GET | `/api/sports/<slug>` | Detalle de un deporte |
-| GET | `/api/posts/?sport=handball` | Posts (filtrables por deporte) |
-| POST | `/api/posts/` | Crear post (multipart/form-data) |
-| DELETE | `/api/posts/<id>` | Eliminar post |
-| GET | `/api/events/?sport=handball&upcoming=true` | Eventos |
-| POST | `/api/events/` | Crear evento (JSON) |
-| DELETE | `/api/events/<id>` | Eliminar evento |
+| GET | `/api/posts?sport=handball` | Posts (filtrables por deporte) |
+| POST | `/api/posts` | Crear post (multipart/form-data) · token |
+| DELETE | `/api/posts/<id>` | Eliminar post · token |
+| GET | `/api/events?sport=handball&upcoming=true` | Eventos |
+| POST | `/api/events` | Crear evento (JSON) · token |
+| DELETE | `/api/events/<id>` | Eliminar evento · token |
+
+Verificar que la protección sigue en pie:
+
+```bash
+cd backend && python3 test_auth.py
+```
 
 ## Deploy en Render
 
@@ -64,10 +94,31 @@ Para detener: `Ctrl+C` y luego `docker compose down`
    - **Build**: `cd frontend && npm install && npm run build && cd ../backend && pip install -r requirements.txt && python seed.py`
    - **Start**: `cd backend && gunicorn "app:create_app()"  --bind 0.0.0.0:$PORT`
 4. Agregar PostgreSQL desde el dashboard de Render
-5. Set env var `DATABASE_URL` con la connection string
+5. Setear las env vars:
+   - `DATABASE_URL` con la connection string de Postgres
+   - `ADMIN_TOKEN` — generarlo con `python3 -c "import secrets; print(secrets.token_urlsafe(32))"`
+   - `SECRET_KEY`
 
-## Fase 2 (ideas futuras)
-- Panel admin para subir fotos/eventos desde el navegador
-- Galería lightbox
-- Inscripciones online a escuelas
-- Notificaciones push de partidos
+> Al pasar a dominio propio hay que actualizar a mano `og:url` y `og:image` en
+> `frontend/index.html`: tienen que ser URLs absolutas o el preview del link se
+> rompe en WhatsApp e Instagram.
+
+## Pendiente
+
+**Fase 1** — que el club actualice el sitio sin tocar código
+- Postgres en Render (hoy SQLite se borra en cada deploy)
+- Panel `/admin` con login por contraseña
+- Que la Landing consuma la API en vez de las constantes hardcodeadas
+- Subida de imágenes a Cloudinary (el disco de Render es efímero)
+- Importador de publicaciones desde Instagram
+
+**Fase 2** — contenido propio de un club
+- Modelo `Match` para partidos y resultados reales
+- Horarios de entrenamiento, categorías, cuerpo técnico
+- Formulario de inscripción
+- Historia y contacto con mapa
+
+**Fase 3** — pulido
+- Tipografía condensada para titulares
+- Paleta sacada del escudo real (hoy usa el verde default de Tailwind)
+- Galería con lightbox, sponsors

@@ -1,0 +1,19 @@
+.git/
+**/__pycache__/
+*.pyc
+*.pyo
+.env
+*.db
+
+# El venv local no sirve dentro de la imagen: las deps se instalan con pip.
+backend/venv/
+backend/uploads/
+backend/instance/
+
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# Originales de las fotos: solo los usa scripts/optimize-images.py en local.
+# Lo que se sirve es el WebP ya generado en frontend/public/images/.
+frontend/assets-src/

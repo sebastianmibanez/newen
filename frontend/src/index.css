@@ -17,8 +17,11 @@
   .editorial-card {
     @apply relative overflow-hidden rounded-xl bg-[#111] cursor-pointer;
   }
+  .card {
+    @apply bg-[#111] border border-white/10 rounded-2xl;
+  }
   .section-label {
-    @apply text-xs font-bold tracking-[0.2em] uppercase text-white/40;
+    @apply text-xs font-bold tracking-[0.2em] uppercase text-white/60;
   }
   .display-title {
     @apply font-black tracking-tighter leading-none;

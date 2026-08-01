@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import Carousel from "../components/Carousel";
-import PostCard from "../components/PostCard";
 import EventCard from "../components/EventCard";
 
 const SPORT_META = {
@@ -12,18 +11,18 @@ const SPORT_META = {
     bgClass: "from-green-900/40 to-emerald-900/20",
     gradient: "from-green-600 to-emerald-400",
     carouselImages: [
-      "/images/carrousel-handball1.png",
-      "/images/carrousel-handball2.png",
-      "/images/carrousel-handball3.png",
+      "/images/carrousel-handball1.webp",
+      "/images/carrousel-handball2.webp",
+      "/images/carrousel-handball3.webp",
     ],
     news: [
       {
-        image: "/images/noticia-handball1.png",
+        image: "/images/noticia-handball1.webp",
         title: "NOTICIÓN 🔥 Antonia Fuentes al Mundial Juvenil en China",
         body: "Nos levantamos este día con una tremenda noticia: nuestra querida Antonia Fuentes, jugadora de la categoría cadete de Balonmano, parte rumbo al MUNDIAL JUVENIL DE ESPECIALIDAD EN CHINA 🌍🇨🇳 ¡Estamos tremendamente orgullosos de ti Anto! Todo el esfuerzo, las mil horas de entrenamiento, el sacrificio y el gran amor por el Balonmano te trajeron hasta aquí. ¡Te deseamos el mayor de los éxitos! 💫 Vamos Chile 🇨🇱",
       },
       {
-        image: "/images/noticia-handball2.png",
+        image: "/images/noticia-handball2.webp",
         title: "5° Aniversario 2024 🔵🟢🔥",
         body: "Seguimos compartiendo fotos de nuestro Aniversario. En las fotos aparecen la sub 17 de básquet, los niños de fútbol y la premiación con el premio \"Jugador Newen\": aquel jugador que engloba compañerismo, esfuerzo, disciplina y constancia. Nos acompañaron Víctor Cepeda (Psicólogo Deportivo), nuestros amigos de @mundofreestylechile y el Alcalde Claudio Castro. 🙌",
       },
@@ -37,9 +36,9 @@ const SPORT_META = {
     bgClass: "from-orange-900/40 to-amber-900/20",
     gradient: "from-orange-600 to-amber-400",
     carouselImages: [
-      "/images/carrousel-basket1.png",
-      "/images/carrousel-basket2.png",
-      "/images/carrousel-basket3.png",
+      "/images/carrousel-basket1.webp",
+      "/images/carrousel-basket2.webp",
+      "/images/carrousel-basket3.webp",
     ],
     news: [],
   },
@@ -51,13 +50,13 @@ const SPORT_META = {
     bgClass: "from-blue-900/40 to-indigo-900/20",
     gradient: "from-blue-700 to-blue-400",
     carouselImages: [
-      "/images/carrousel-futbol1.png",
-      "/images/carrousel-futbol2.png",
-      "/images/carrousel-futbol3.png",
+      "/images/carrousel-futbol1.webp",
+      "/images/carrousel-futbol2.webp",
+      "/images/carrousel-futbol3.webp",
     ],
     news: [
       {
-        image: "/images/noticia-futbol1.png",
+        image: "/images/noticia-futbol1.webp",
         title: "Noticias Fútbol",
         body: "",
       },
@@ -112,6 +111,8 @@ export default function SportPage({ slug }) {
                     <img
                       src={noticia.image}
                       alt={noticia.title}
+                      loading="lazy"
+                      decoding="async"
                       className="w-full aspect-video object-cover"
                     />
                   )}

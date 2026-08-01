@@ -8,6 +8,7 @@ export default function Carousel({ images, autoplayMs = 4000 }) {
 
   useEffect(() => {
     if (images.length <= 1) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const t = setInterval(next, autoplayMs);
     return () => clearInterval(t);
   }, [next, autoplayMs, images.length]);
@@ -22,6 +23,8 @@ export default function Carousel({ images, autoplayMs = 4000 }) {
           key={src}
           src={src}
           alt=""
+          loading="lazy"
+          decoding="async"
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
             i === current ? "opacity-100" : "opacity-0"
           }`}
