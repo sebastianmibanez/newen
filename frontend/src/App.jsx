@@ -3,6 +3,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Landing from "./pages/Landing";
 import SportPage from "./pages/SportPage";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 export default function App() {
@@ -16,6 +17,7 @@ export default function App() {
             <Route path="/handball" element={<SportPage slug="handball" />} />
             <Route path="/basketball" element={<SportPage slug="basketball" />} />
             <Route path="/futbol" element={<SportPage slug="futbol" />} />
+            <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>

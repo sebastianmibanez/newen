@@ -63,6 +63,35 @@ Para detener: `Ctrl+C` y luego `docker compose down`
 > La base de datos SQLite se guarda dentro del contenedor backend.
 > Para producción Render usa PostgreSQL automáticamente.
 
+## Panel de administración
+
+En `/admin`. Pide el `ADMIN_TOKEN` una vez y lo guarda en el navegador. Desde ahí
+se crean y borran noticias y eventos.
+
+Las imágenes se referencian por **ruta o URL** (`/images/noticia-handball1.webp`),
+no se suben. El disco de Render es efímero: un archivo subido desaparece en el
+siguiente deploy, así que la subida se sacó en vez de dejarla perdiendo fotos en
+silencio. Para agregar fotos nuevas: a `assets-src/`, correr
+`scripts/optimize-images.py`, commitear.
+
+## Base de datos
+
+El esquema lo manejan las migraciones, no `db.create_all()`:
+
+```bash
+cd backend
+export FLASK_APP=app.py
+flask db migrate -m "que cambió"   # después de tocar models.py
+flask db upgrade                   # aplicar
+```
+
+El contenedor corre `flask db upgrade && python seed.py` al arrancar. `seed.py`
+es idempotente: si ya hay datos, no toca nada.
+
+> Si alguna vez apuntás `DATABASE_URL` a una base que ya tenía tablas creadas por
+> el viejo `db.create_all()`, `flask db upgrade` va a fallar porque las tablas ya
+> existen. Se arregla corriendo `flask db stamp head` una vez sobre esa base.
+
 ## API Endpoints
 
 Los GET son públicos. **Todo lo que escribe o borra exige el header
@@ -74,7 +103,7 @@ está seteada, las escrituras se rechazan con 401 (el default es cerrado).
 | GET | `/api/sports` | Listado de deportes |
 | GET | `/api/sports/<slug>` | Detalle de un deporte |
 | GET | `/api/posts?sport=handball` | Posts (filtrables por deporte) |
-| POST | `/api/posts` | Crear post (multipart/form-data) · token |
+| POST | `/api/posts` | Crear noticia (JSON) · token |
 | DELETE | `/api/posts/<id>` | Eliminar post · token |
 | GET | `/api/events?sport=handball&upcoming=true` | Eventos |
 | POST | `/api/events` | Crear evento (JSON) · token |
@@ -106,8 +135,8 @@ cd backend && python3 test_smoke.py
 ## Pendiente
 
 **Fase 1** — que el club actualice el sitio sin tocar código
-- Postgres en Render (hoy SQLite se borra en cada deploy)
-- Panel `/admin` con login por contraseña
+- Postgres en Render — falta crear la base (hoy SQLite se borra en cada deploy)
+- ~~Panel `/admin`~~ hecho
 - Que la Landing consuma la API en vez de las constantes hardcodeadas
 - Subida de imágenes a Cloudinary (el disco de Render es efímero)
 - Importador de publicaciones desde Instagram

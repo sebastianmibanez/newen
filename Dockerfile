@@ -16,11 +16,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ ./
 COPY --from=frontend-build /app/frontend/dist /frontend/dist
 
-RUN mkdir -p uploads
-
 ENV FLASK_APP=app.py
 ENV PYTHONUNBUFFERED=1
 
 EXPOSE 5000
 
-CMD ["sh", "-c", "python seed.py && gunicorn 'app:create_app()' --bind 0.0.0.0:${PORT:-5000} --workers 2"]
+# `flask db upgrade` crea y actualiza el esquema. Antes se usaba db.create_all(),
+# que crea tablas nuevas pero nunca modifica las existentes: servia con la base
+# vacia y se rompia apenas hubiera datos reales que migrar.
+CMD ["sh", "-c", "flask db upgrade && python seed.py && gunicorn 'app:create_app()' --bind 0.0.0.0:${PORT:-5000} --workers 2"]

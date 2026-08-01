@@ -6,8 +6,6 @@ __pycache__/
 *.db
 venv/
 backend/venv/
-backend/uploads/
-backend/migrations/
 backend/instance/
 
 # Node

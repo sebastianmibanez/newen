@@ -13,7 +13,12 @@ mimetypes.add_type("image/webp", ".webp")
 
 
 def create_app():
-    app = Flask(__name__, static_folder="../frontend/dist", static_url_path="")
+    # static_folder=None a proposito. Con static_url_path="" Flask registraba su
+    # propia regla /<path:filename> que le ganaba a serve_react, y toda URL que no
+    # fuera un archivo real moria en 404: /handball, /basketball y /futbol daban
+    # 404 al entrar directo o al refrescar. Navegando dentro del sitio no se veia
+    # porque ahi rutea React. Ahora serve_react atiende todo.
+    app = Flask(__name__, static_folder=None)
 
     # Sin esto, GET /api/events responde un 308 hacia /api/events/ y el frontend
     # paga un viaje de ida y vuelta extra en cada llamada.
@@ -22,7 +27,6 @@ def create_app():
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret")
     app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", "sqlite:///newen.db")
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    app.config["UPLOAD_FOLDER"] = os.path.join(os.path.dirname(__file__), "uploads")
     app.config["MAX_CONTENT_LENGTH"] = int(os.getenv("MAX_CONTENT_LENGTH", 16 * 1024 * 1024))
 
     db.init_app(app)
@@ -65,16 +69,11 @@ def create_app():
     app.register_blueprint(posts_bp)
     app.register_blueprint(events_bp)
 
-    # Serve uploaded files
-    @app.get("/uploads/<path:filename>")
-    def uploaded_file(filename):
-        return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
-
     # Serve React app for all non-API routes
     @app.get("/", defaults={"path": ""})
     @app.get("/<path:path>")
     def serve_react(path):
-        if path.startswith("api/") or path.startswith("uploads/"):
+        if path.startswith("api/"):
             return {"error": "Not found"}, 404
         dist = os.path.join(os.path.dirname(__file__), "../frontend/dist")
         if path and os.path.exists(os.path.join(dist, path)):
