@@ -83,6 +83,30 @@ export default function Admin() {
     }
   }
 
+  // Al terminar el OAuth, Instagram devuelve el navegador de quien autorizo (no
+  // el nuestro) a esta pagina. Sin token veria un pedido de contrasena, que
+  // parece un error justo despues de haber hecho todo bien.
+  const volviendoDeInstagram = new URLSearchParams(window.location.search).get("instagram");
+  if (!token && volviendoDeInstagram) {
+    const bien = volviendoDeInstagram === "ok";
+    return (
+      <div className="pt-24 pb-24 px-6 max-w-sm mx-auto text-center">
+        <p className="text-5xl mb-6">{bien ? "✓" : "✕"}</p>
+        <h1 className="display-title text-3xl mb-4">
+          {bien ? "¡Listo, gracias!" : "No se pudo conectar"}
+        </h1>
+        <p className="text-white/70 leading-relaxed">
+          {bien
+            ? "La cuenta de Instagram del club quedó conectada con la web. Ya podés cerrar esta pestaña."
+            : "Algo falló al conectar la cuenta. Avisale a Sebastián y lo intentan de nuevo."}
+        </p>
+        <a href="/" className="btn-primary mt-8">
+          Ir al sitio del club
+        </a>
+      </div>
+    );
+  }
+
   if (!token) {
     return (
       <div className="pt-16 pb-24 px-6 max-w-sm mx-auto">
