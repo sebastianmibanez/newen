@@ -2,124 +2,120 @@ import { useEffect, useState } from "react";
 import Carousel from "../components/Carousel";
 import EventCard from "../components/EventCard";
 
+// Lo unico que queda hardcodeado son las fotos de portada y del carrusel: son la
+// identidad fija de cada disciplina. Las noticias vienen de la API, asi lo que se
+// carga en /admin o se importa de Instagram aparece aca sin tocar codigo.
 const SPORT_META = {
   handball: {
     label: "Handball",
-    emoji: "🤾‍♀️",
     desc: "Escuelita · Infantiles · Cadetas",
-    accentClass: "text-green-400",
-    bgClass: "from-green-900/40 to-emerald-900/20",
-    gradient: "from-green-600 to-emerald-400",
     carouselImages: [
       "/images/carrousel-handball1.webp",
       "/images/carrousel-handball2.webp",
       "/images/carrousel-handball3.webp",
     ],
-    news: [
-      {
-        image: "/images/noticia-handball1.webp",
-        title: "NOTICIÓN 🔥 Antonia Fuentes al Mundial Juvenil en China",
-        body: "Nos levantamos este día con una tremenda noticia: nuestra querida Antonia Fuentes, jugadora de la categoría cadete de Balonmano, parte rumbo al MUNDIAL JUVENIL DE ESPECIALIDAD EN CHINA 🌍🇨🇳 ¡Estamos tremendamente orgullosos de ti Anto! Todo el esfuerzo, las mil horas de entrenamiento, el sacrificio y el gran amor por el Balonmano te trajeron hasta aquí. ¡Te deseamos el mayor de los éxitos! 💫 Vamos Chile 🇨🇱",
-      },
-      {
-        image: "/images/noticia-handball2.webp",
-        title: "5° Aniversario 2024 🔵🟢🔥",
-        body: "Seguimos compartiendo fotos de nuestro Aniversario. En las fotos aparecen la sub 17 de básquet, los niños de fútbol y la premiación con el premio \"Jugador Newen\": aquel jugador que engloba compañerismo, esfuerzo, disciplina y constancia. Nos acompañaron Víctor Cepeda (Psicólogo Deportivo), nuestros amigos de @mundofreestylechile y el Alcalde Claudio Castro. 🙌",
-      },
-    ],
   },
   basketball: {
     label: "Basketball",
-    emoji: "🏀",
     desc: "Escuelita",
-    accentClass: "text-orange-400",
-    bgClass: "from-orange-900/40 to-amber-900/20",
-    gradient: "from-orange-600 to-amber-400",
     carouselImages: [
       "/images/carrousel-basket1.webp",
       "/images/carrousel-basket2.webp",
       "/images/carrousel-basket3.webp",
     ],
-    news: [],
   },
   futbol: {
     label: "Fútbol",
-    emoji: "⚽",
     desc: "Escuelita",
-    accentClass: "text-blue-400",
-    bgClass: "from-blue-900/40 to-indigo-900/20",
-    gradient: "from-blue-700 to-blue-400",
     carouselImages: [
       "/images/carrousel-futbol1.webp",
       "/images/carrousel-futbol2.webp",
       "/images/carrousel-futbol3.webp",
-    ],
-    news: [
-      {
-        image: "/images/noticia-futbol1.webp",
-        title: "Noticias Fútbol",
-        body: "",
-      },
     ],
   },
 };
 
 export default function SportPage({ slug }) {
   const meta = SPORT_META[slug] || {};
+  const [posts, setPosts] = useState([]);
   const [events, setEvents] = useState([]);
-  const [loadingEvents, setLoadingEvents] = useState(true);
+  const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
-    setLoadingEvents(true);
-    fetch(`/api/events?sport=${slug}&upcoming=true`)
-      .then((r) => r.json())
-      .then(setEvents)
+    let vigente = true;
+    setCargando(true);
+    Promise.all([
+      fetch(`/api/posts?sport=${slug}`).then((r) => r.json()),
+      fetch(`/api/events?sport=${slug}&upcoming=true`).then((r) => r.json()),
+    ])
+      .then(([p, e]) => {
+        if (!vigente) return;
+        setPosts(Array.isArray(p) ? p : []);
+        setEvents(Array.isArray(e) ? e : []);
+      })
       .catch(() => {})
-      .finally(() => setLoadingEvents(false));
+      .finally(() => vigente && setCargando(false));
+    // Al cambiar de deporte sin desmontar, la respuesta vieja puede llegar
+    // despues de la nueva y pisarla.
+    return () => {
+      vigente = false;
+    };
   }, [slug]);
+
+  const portada = meta.carouselImages?.[0];
 
   return (
     <>
-      {/* ── Sport header ── */}
-      <section className={`bg-gradient-to-br ${meta.bgClass} border-b border-white/10`}>
-        <div className="max-w-6xl mx-auto px-4 py-10 flex items-center gap-5">
-          <span className="text-5xl">{meta.emoji}</span>
-          <div>
-            <h1 className={`text-4xl font-black tracking-tight ${meta.accentClass}`}>{meta.label}</h1>
-            <p className="text-white/50 mt-0.5">{meta.desc} · Club Deportivo Newen</p>
+      {/* ── Portada del deporte ── */}
+      <section className="relative h-[42vh] min-h-[300px] overflow-hidden">
+        {portada && (
+          <img
+            src={portada}
+            alt=""
+            fetchPriority="high"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0b0d] via-[#0a0b0d]/55 to-[#0a0b0d]/20" />
+        <div className="absolute inset-0 flex items-end">
+          <div className="max-w-7xl mx-auto w-full px-6 md:px-10 pb-10">
+            <p className="section-label mb-3">{meta.desc} · Club Deportivo Newen</p>
+            <h1 className="display-title text-5xl md:text-7xl">{meta.label}</h1>
           </div>
         </div>
       </section>
 
-      <div className="max-w-6xl mx-auto px-4 py-12 flex flex-col gap-16">
-
-        {/* ── Carousel ── */}
+      <div className="max-w-7xl mx-auto px-6 md:px-10 py-16 flex flex-col gap-16">
         {meta.carouselImages?.length > 0 && (
           <section>
+            <p className="section-label mb-4">Galería</p>
             <Carousel images={meta.carouselImages} />
           </section>
         )}
 
-        {/* ── Noticias ── */}
-        {meta.news?.length > 0 && (
+        {posts.length > 0 && (
           <section>
-            <h2 className="text-2xl font-black mb-6">Noticias</h2>
-            <div className="grid md:grid-cols-2 gap-8">
-              {meta.news.filter(n => n.title).map((noticia, i) => (
-                <article key={i} className="card overflow-hidden flex flex-col">
-                  {noticia.image && (
+            <h2 className="display-title text-3xl md:text-4xl mb-8">Noticias</h2>
+            <div className="grid md:grid-cols-2 gap-4">
+              {posts.map((post) => (
+                <article
+                  key={post.id}
+                  className="group relative overflow-hidden rounded-2xl bg-[#121317] min-h-[280px] flex"
+                >
+                  {post.image && (
                     <img
-                      src={noticia.image}
-                      alt={noticia.title}
+                      src={post.image}
+                      alt=""
                       loading="lazy"
                       decoding="async"
-                      className="w-full aspect-video object-cover"
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     />
                   )}
-                  <div className="p-5 flex flex-col gap-2 flex-1">
-                    <h3 className="font-bold text-lg leading-snug">{noticia.title}</h3>
-                    {noticia.body && (
-                      <p className="text-white/60 text-sm leading-relaxed">{noticia.body}</p>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
+                  <div className="relative mt-auto p-6">
+                    <h3 className="font-black text-xl md:text-2xl leading-tight mb-2">{post.title}</h3>
+                    {post.body && (
+                      <p className="text-white/70 text-sm leading-relaxed line-clamp-3">{post.body}</p>
                     )}
                   </div>
                 </article>
@@ -128,32 +124,34 @@ export default function SportPage({ slug }) {
           </section>
         )}
 
-        {/* ── Próximos eventos ── */}
         <section>
-          <h2 className="text-2xl font-black mb-6">Próximos eventos</h2>
-          {loadingEvents ? (
+          <h2 className="display-title text-3xl md:text-4xl mb-8">Próximos eventos</h2>
+          {cargando ? (
             <div className="flex justify-center py-10">
               <div className="w-7 h-7 border-2 border-white/20 border-t-white rounded-full animate-spin" />
             </div>
           ) : events.length === 0 ? (
-            <EmptyState message="No hay eventos programados por ahora." />
+            <p className="text-white/45 py-8">
+              No hay eventos programados por ahora. Seguinos en{" "}
+              <a
+                href="https://www.instagram.com/club_deportivo_newen"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-newen-green-light hover:underline"
+              >
+                Instagram
+              </a>{" "}
+              para enterarte de los próximos.
+            </p>
           ) : (
             <div className="grid md:grid-cols-2 gap-4">
-              {events.map((e) => <EventCard key={e.id} event={e} />)}
+              {events.map((e) => (
+                <EventCard key={e.id} event={e} />
+              ))}
             </div>
           )}
         </section>
-
       </div>
     </>
-  );
-}
-
-function EmptyState({ message }) {
-  return (
-    <div className="text-center py-12 text-white/30">
-      <p className="text-3xl mb-2">🏆</p>
-      <p>{message}</p>
-    </div>
   );
 }
