@@ -31,6 +31,9 @@ class Post(db.Model):
     image = db.Column(db.String(255))
     pinned = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    # Id de la publicacion de Instagram de la que salio, si vino de ahi. Unico,
+    # para que importar dos veces no duplique la noticia.
+    instagram_id = db.Column(db.String(50), unique=True, nullable=True)
 
     def to_dict(self):
         return {
@@ -41,7 +44,59 @@ class Post(db.Model):
             "body": self.body,
             "image": self.image,
             "pinned": self.pinned,
+            "instagram_id": self.instagram_id,
             "created_at": self.created_at.isoformat(),
+        }
+
+
+class MediaAsset(db.Model):
+    """Una foto guardada en la base, servida por /media/<id>.
+
+    Las URLs que devuelve Instagram caducan en horas, asi que la foto hay que
+    descargarla y hospedarla. El disco de Render es efimero y no hay cuenta de
+    Cloudinary, asi que por ahora viven aca.
+
+    ponytail: bytes en la base. Aguanta de sobra el volumen de un club (una foto
+    ronda los 150 KB y el Postgres free da 1 GB) y no suma servicios ni cuentas.
+    Si algun dia son miles de fotos o hace falta CDN, migrar a almacenamiento
+    externo cambiando solo lo que escribe `Post.image`.
+    """
+
+    __tablename__ = "media_assets"
+    id = db.Column(db.Integer, primary_key=True)
+    content_type = db.Column(db.String(50), nullable=False, default="image/jpeg")
+    data = db.deferred(db.Column(db.LargeBinary, nullable=False))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class InstagramAccount(db.Model):
+    """La cuenta de Instagram conectada. Hay una sola fila, siempre id=1."""
+
+    __tablename__ = "instagram_account"
+    id = db.Column(db.Integer, primary_key=True)
+    ig_user_id = db.Column(db.String(50))
+    username = db.Column(db.String(100))
+    access_token = db.Column(db.Text)
+    # Los tokens largos duran 60 dias y se renuevan si tienen mas de 24 horas.
+    expires_at = db.Column(db.DateTime)
+    # Nonce de un solo uso para el OAuth. Evita que alguien que descubra la URL
+    # del callback conecte su propia cuenta encima de la del club.
+    oauth_state = db.Column(db.String(64))
+    oauth_state_at = db.Column(db.DateTime)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    @property
+    def connected(self):
+        return bool(self.access_token)
+
+    def to_dict(self):
+        return {
+            "connected": self.connected,
+            "username": self.username,
+            "expires_at": self.expires_at.isoformat() if self.expires_at else None,
+            "days_left": (
+                (self.expires_at - datetime.utcnow()).days if self.expires_at else None
+            ),
         }
 
 

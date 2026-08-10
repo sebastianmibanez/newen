@@ -37,11 +37,17 @@ def create_app():
     # Si ADMIN_TOKEN no esta seteado, toda escritura queda bloqueada.
     admin_token = os.getenv("ADMIN_TOKEN")
 
+    def needs_token(path, method):
+        # /api/instagram/ expone el estado de la cuenta conectada, asi que se
+        # protege tambien en GET. Los callbacks de Meta viven en /auth/, fuera
+        # de aca, porque Instagram no puede mandar nuestro header.
+        if path.startswith("/api/instagram/"):
+            return True
+        return method not in ("GET", "HEAD", "OPTIONS") and path.startswith("/api/")
+
     @app.before_request
     def require_admin_token():
-        if request.method in ("GET", "HEAD", "OPTIONS"):
-            return None
-        if not request.path.startswith("/api/"):
+        if not needs_token(request.path, request.method):
             return None
         sent = request.headers.get("X-Admin-Token", "")
         if not admin_token or not hmac.compare_digest(sent, admin_token):
@@ -53,8 +59,9 @@ def create_app():
     # es lo que apunta a los assets nuevos despues de cada deploy.
     @app.after_request
     def cache_headers(response):
-        if request.path.startswith("/assets/"):
-            # Vite le pone hash al nombre; si cambia el contenido, cambia la URL.
+        if request.path.startswith("/assets/") or request.path.startswith("/media/"):
+            # Vite le pone hash al nombre y /media/<id> siempre devuelve los
+            # mismos bytes: en ambos casos, si cambia el contenido cambia la URL.
             response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
         elif request.path.startswith("/images/") or request.path in ("/favicon.png", "/og-image.jpg"):
             # Sin hash en el nombre: un dia de cache es el techo razonable para
@@ -65,9 +72,13 @@ def create_app():
     from routes.sports import bp as sports_bp
     from routes.posts import bp as posts_bp
     from routes.events import bp as events_bp
+    from routes.instagram import bp as instagram_bp, media_bp, public_bp as instagram_public_bp
     app.register_blueprint(sports_bp)
     app.register_blueprint(posts_bp)
     app.register_blueprint(events_bp)
+    app.register_blueprint(instagram_bp)
+    app.register_blueprint(instagram_public_bp)
+    app.register_blueprint(media_bp)
 
     # Serve React app for all non-API routes
     @app.get("/", defaults={"path": ""})

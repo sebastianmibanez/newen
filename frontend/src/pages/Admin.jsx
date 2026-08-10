@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import InstagramPanel from "../components/InstagramPanel";
 
 // ponytail: el token vive en localStorage y es uno solo, compartido. Alcanza
 // para un sitio que administra una persona. Si alguna vez lo usan varios y hace
@@ -137,6 +138,8 @@ export default function Admin() {
           {error}
         </p>
       )}
+
+      <InstagramPanel api={api} sports={sports} onImported={reload} />
 
       {/* ── Noticias ── */}
       <section className="mb-14">
