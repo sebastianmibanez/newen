@@ -25,8 +25,20 @@ def create_app():
     app.url_map.strict_slashes = False
 
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret")
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", "sqlite:///newen.db")
+
+    database_url = os.getenv("DATABASE_URL", "sqlite:///newen.db")
+    # Render entrega la URL como postgres://, un esquema que SQLAlchemy 2 dejo de
+    # reconocer. Sin esta linea el contenedor no arranca y el error no dice por que.
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
+    app.config["SQLALCHEMY_DATABASE_URI"] = database_url
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+    if database_url.startswith("postgresql://"):
+        # El plan free duerme el servicio y Postgres corta las conexiones ociosas.
+        # Sin pre_ping, la primera consulta despues de un rato revienta con
+        # "server closed the connection unexpectedly".
+        app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {"pool_pre_ping": True, "pool_recycle": 300}
     app.config["MAX_CONTENT_LENGTH"] = int(os.getenv("MAX_CONTENT_LENGTH", 16 * 1024 * 1024))
 
     db.init_app(app)
